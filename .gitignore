@@ -9,8 +9,9 @@ build/
 eggs/
 *.egg
 
-# Isaac Lab / Hydra outputs
-outputs/
+# Isaac Lab / Hydra temp files (keep demo artifacts)
+outputs/202*/
+outputs/logs/
 logs/
 
 # IDE
