@@ -1,0 +1,23 @@
+[project]
+name = "fr3_isaaclab_project"
+version = "0.1.0"
+description = "Isaac Lab external project for Franka Research 3 (FR3) robot manipulation tasks"
+requires-python = ">=3.10"
+authors = [
+    { name = "Isaac Lab User" },
+]
+dependencies = [
+    "isaaclab",
+    "isaaclab_assets",
+    "isaaclab_tasks",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project.scripts]
+# placeholder
+
+[tool.setuptools.packages.find]
+where = ["source/fr3_isaaclab_project"]
