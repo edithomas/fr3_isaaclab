@@ -29,4 +29,5 @@ __all__ = [
     "check_ee_body_present",
     "check_nonzero_rigid_bodies",
     "close_with_exit_code",
+    "evaluator",
 ]
