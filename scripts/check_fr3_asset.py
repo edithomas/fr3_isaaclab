@@ -61,7 +61,7 @@ def check_fr3_asset():
     print(f"\n--- Articulation Roots ---", flush=True)
     articulations = []
     for prim in stage.Traverse():
-        if prim.IsA(UsdPhysics.ArticulationRootAPI):
+        if prim.HasAPI(UsdPhysics.ArticulationRootAPI):
             articulations.append(prim)
             print(f"  {prim.GetPath()}", flush=True)
 
@@ -74,7 +74,7 @@ def check_fr3_asset():
         "flange", "tool0", "gripper", "gripper_center",
     ]
     for prim in stage.Traverse():
-        if prim.IsA(UsdPhysics.RigidBodyAPI):
+        if prim.HasAPI(UsdPhysics.RigidBodyAPI):
             name = prim.GetName()
             path = str(prim.GetPath())
             body_names.append((name, path))
