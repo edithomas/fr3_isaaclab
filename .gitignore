@@ -14,6 +14,11 @@ outputs/202*/
 outputs/logs/
 logs/
 
+# Experimental tooling artifacts (diagnostics/eval outputs) — never commit
+artifacts/
+outputs/diagnostics/
+outputs/eval/
+
 # IDE
 .vscode/
 .idea/

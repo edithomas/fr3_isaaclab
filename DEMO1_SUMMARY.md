@@ -1,5 +1,21 @@
 # Demo 1: FR3 轨迹录制与离线可视化
 
+> **⚠️ 重要修正（本次工具化 PR）**：本文档早期版本将“零关节位置动作”描述为
+> “零力矩动作/机械臂仅受重力/自由塌落”，并据此把录制的 `joint_pos` 当作绝对角来解释“重力漂移”。
+> 两点均与 Isaac Lab v2.1.0 源码不符，已纠正：
+>
+> 1. **零动作 ≠ 零力矩**。`JointPositionAction(use_default_offset=True, scale=0.5)`
+>    会把位置目标设为 `default_joint_pos`，由隐式 PD（stiffness=80, damping=4）主动拉住；
+>    零动作的目标就是默认位姿，不是自由落体。详见 `scripts/diag_fr3_pd_gravity.py`（D3）
+>    的 A/B/C 三腿证据：PD 关闭（C）才真正塌落，PD 开启（A/B）收敛。
+> 2. **录制的 `joint_pos` 是相对值**。`mdp.joint_pos_rel` 返回 `joint_pos - default_joint_pos`，
+>    并叠加 ±0.01 均匀噪声。先前 F3/H7/P0-1 的“runtime default mismatch”已被证伪：
+>    相对观测本就该接近 0，与绝对位姿差一个 `default`。详见
+>    `scripts/diag_fr3_observation_triangulation.py`（D1）。
+>
+> 下文保留原始记录以备溯源，**“核心发现：重力漂移”小节及“零力矩动作”措辞作废**，
+> 以本修正与 D1/D3 诊断输出为准。
+
 **日期**: 2026-07-24 | **耗时**: ~5 分钟
 
 ## 概述
@@ -20,7 +36,7 @@
 1. `AppLauncher(headless=True)` 启动 Isaac Sim
 2. `gym.make("FR3-Reach-v0", cfg=FR3ReachEnvCfg)` 创建环境（1 env）
 3. `env.reset()` 初始化，FR3 机械臂处于默认关节位姿
-4. 循环 50 步：`env.step(torch.zeros(1,7))` — **零力矩动作**，机械臂仅受重力
+4. 循环 50 步：`env.step(torch.zeros(1,7))` — 零关节位置动作（位置目标 = `default_joint_pos`，由隐式 PD 拉住，**非零力矩、非自由落体**；见上方修正与 D3）
 5. 每步记录 joint_pos(9)、joint_vel(9)、pose_command(7)、actions(7)、reward
 
 **输出**: `outputs/record/record_20260724_030014/`
@@ -54,9 +70,11 @@ python3 scripts/make_trajectory_video.py \
 | 左下 | 7 关节位置 vs 时间 | 滑动窗口（20步），展示重力漂移 |
 | 右下 | Reward + Action 幅值 | Reward 变化曲线 + 动作 L2 范数 |
 
-## 核心发现：重力漂移
+## 核心发现：相对观测与 PD 收敛（修正后）
 
-由于使用零动作（不给力矩），机械臂在重力下自由塌落：
+> 原标题“重力漂移”已作废（见文档顶部修正）。下表为原始数值，但其语义是
+> **相对默认位姿** 的观测（`joint_pos - default_joint_pos`），叠加 ±0.01 噪声；
+> 反映的是 PD 从 reset 缩放位姿拉回默认的过程，不是重力自由塌落。
 
 | 关节 | 初始 (rad) | 最终 (rad) | 漂移 (rad) | 漂移速率 (rad/s) |
 |------|-----------|-----------|-----------|-----------------|
@@ -68,10 +86,10 @@ python3 scripts/make_trajectory_video.py \
 | joint6 | -0.844 | -0.072 | **+0.772** | 0.495 |
 | joint7 | -0.081 | 0.002 | +0.082 | 0.053 |
 
-- 关节 4 漂移最大：**1.11 rad (63°)**
+- 关节 4 变化最大：**1.11 rad (63°)**（相对值；PD 从 reset 缩放位姿收敛，非重力塌落）
 - 关节 6 漂移：**0.77 rad (44°)**
 - 关节 2 漂移：**0.53 rad (30°)**
-- 这就是为什么需要 RL 训练 — 策略必须学会输出合适的力矩来抵抗重力并追踪目标
+- 这就是为什么需要 RL 训练 — 策略必须学会输出合适的动作来追踪目标（零动作已由 PD 拉回默认位姿，见 D3）
 
 ## 学到的关键概念
 
