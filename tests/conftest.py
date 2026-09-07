@@ -1,24 +1,56 @@
-"""Pytest configuration for the ensemble_gate package tests.
+"""Pytest configuration for the FR3 experimental tooling test suite.
 
-Adds the repository root to ``sys.path`` so ``import ensemble_gate`` works
-without installing the package (which would pull in Isaac Lab dependencies).
+Two test categories:
+
+* **static** (default, run locally on macOS / CI without a GPU): exercise the
+  pure-logic helpers under ``fr3_isaaclab_project.diagnostics`` and the
+  non-Isaac-Sim parts of the scripts. These are the regression tests for the
+  load-bearing behaviours.
+
+* **runtime** (marker ``@pytest.mark.runtime``): launch a real Isaac Sim
+  ``SimulationApp``. They are skipped automatically unless
+  ``RUN_FR3_RUNTIME_TESTS=1`` is set, because they require the remote
+  one-L40 container (Isaac Sim 4.5 / Isaac Lab v2.1.0) and cannot run on macOS.
 """
+from __future__ import annotations
+
+import json
 import os
 import sys
 
-# Repository root (parent of this tests/ directory) so that
-# `import ensemble_gate` resolves to the top-level package.
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if ROOT not in sys.path:
-    sys.path.insert(0, ROOT)
+import pytest
 
-import json  # noqa: E402
-import pytest  # noqa: E402
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list):
+    """Skip runtime tests unless explicitly opted in."""
+    if os.environ.get("RUN_FR3_RUNTIME_TESTS") == "1":
+        return
+    skip_runtime = pytest.mark.skip(
+        reason="runtime test: needs Isaac Sim container; set RUN_FR3_RUNTIME_TESTS=1 to run"
+    )
+    for item in items:
+        if "runtime" in item.keywords:
+            item.add_marker(skip_runtime)
+
+
+def pytest_configure(config: pytest.Config):
+    config.addinivalue_line("markers", "runtime: needs a live Isaac Sim container")
+
+
+# --------------------------------------------------------------------------- #
+# ensemble_gate test support
+# --------------------------------------------------------------------------- #
+# Make the top-level ``ensemble_gate`` package importable without installing
+# the project (which would pull in Isaac Lab dependencies). The repository root
+# is the parent of this tests/ directory.
+_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
 
 
 @pytest.fixture
 def tmp_jsonl(tmp_path):
-    """Return a helper that writes records to a JSONL file and returns path."""
+    """Write records to a JSONL file and return its path."""
 
     def _make(records, name="episodes.jsonl"):
         path = tmp_path / name
@@ -32,16 +64,14 @@ def tmp_jsonl(tmp_path):
 
 @pytest.fixture
 def run_cli():
-    """Return a helper that runs the CLI as a subprocess and captures output."""
+    """Run the ensemble_gate CLI as a subprocess; return (rc, stdout, stderr)."""
     import subprocess
 
-    def _run(*args, env=None, cwd=ROOT):
+    def _run(*args, env=None, cwd=_ROOT):
         full_env = dict(os.environ)
         if env:
             full_env.update(env)
-        full_env.setdefault("PYTHONPATH", ROOT)
-        # Prefer `python -m ensemble_gate` so the package path is resolved
-        # via PYTHONPATH=ROOT.
+        full_env.setdefault("PYTHONPATH", _ROOT)
         proc = subprocess.run(
             [sys.executable, "-m", "ensemble_gate", *args],
             capture_output=True,

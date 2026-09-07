@@ -8,15 +8,22 @@ mechanical geometry).
 Usage:
     ~/IsaacLab/isaaclab.sh -p scripts/generate_fr3_usd.py --headless
 
+Exit codes: 0 = USD generated; 1 = URDF/import failure; 6 = unexpected.
+
 Output:  ~/fr3_isaaclab_project/assets/fr3/fr3.usd
 """
 
 import argparse
 import os
 import shutil
+import sys
 from isaaclab.app import AppLauncher
 
 parser = argparse.ArgumentParser(description="Generate FR3 USD from URDF.")
+parser.add_argument("--isaacsim-root", type=str,
+                    default=os.environ.get("ISAACSIM_ROOT",
+                                           "/public/home/s2353600/.local/lib/python3.10/site-packages/isaacsim"),
+                    help="pip isaacsim install root (overridable via ISAACSIM_ROOT env)")
 AppLauncher.add_app_launcher_args(parser)
 args_cli = parser.parse_args()
 
@@ -30,7 +37,7 @@ from pxr import Sdf, UsdPhysics, Gf
 
 def generate_fr3_usd():
     # Paths
-    isaacsim_root = "/public/home/s2353600/.local/lib/python3.10/site-packages/isaacsim"
+    isaacsim_root = args_cli.isaacsim_root
     ext_path = f"{isaacsim_root}/extscache/isaacsim.asset.importer.urdf-2.3.10+106.4.0.lx64.r.cp310"
     panda_data = f"{ext_path}/data/urdf/robots/franka_description"
 
@@ -42,6 +49,7 @@ def generate_fr3_usd():
 
     if not os.path.exists(fr3_urdf_source):
         print(f"[ERROR] FR3 URDF not found at: {fr3_urdf_source}")
+        print(f"        Set --isaacsim-root or ISAACSIM_ROOT env to your pip isaacsim install.")
         return False
 
     # Create a temp directory for the URDF + meshes
@@ -115,14 +123,24 @@ def generate_fr3_usd():
 
 
 if __name__ == "__main__":
+    success = False
+    exit_code = 6  # unexpected
     try:
         success = generate_fr3_usd()
+        exit_code = 0 if success else 1
         if success:
             print("\nSUCCESS: FR3 USD generated.")
             print("You can now update assets/fr3.py to use the local path:")
             print("  FR3_USD_PATH = os.path.expanduser('~/fr3_isaaclab_project/assets/fr3/fr3.usd')")
-    except Exception as e:
+    except Exception:
         import traceback
         traceback.print_exc()
+        exit_code = 6
     finally:
-        simulation_app.close()
+        try:
+            simulation_app.close()
+        except Exception:
+            pass
+        sys.stdout.flush()
+        sys.stderr.flush()
+        sys.exit(exit_code)

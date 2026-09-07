@@ -84,7 +84,16 @@ analysis tooling under this pattern rather than dragging in simulator deps.
 
 - Always use `--headless` on servers without a display
 - Vulkan `ERROR_INCOMPATIBLE_DRIVER` warnings are non-fatal; physics (PhysX on CUDA) still works
-- May need system libraries: `libsm6 libxrender1 libfontconfig1 libxt6 libxfixes3 libxrandr2 libxcursor1 libxi6`
+- May need system libraries: `libsm6 libxrender1 libfontconfig1 libxt6 libxfixes3 libxrandr2 libxcursor1 libxi6` (see `docs/HEADLESS_X11_PACKAGES.md`)
+
+## Experimental Tooling (diagnostics / recorder / evaluator)
+
+- Overview + official source URLs: `docs/EXPERIMENTAL_TOOLING.md`.
+- Pure-logic helpers (no Isaac Sim imports, unit-tested locally): `source/fr3_isaaclab_project/fr3_isaaclab_project/diagnostics/`.
+- Tests: `tests/`; run locally with `PYTHONPATH=source/fr3_isaaclab_project python3 -m pytest tests/ -q`. Runtime tests need the container (`RUN_FR3_RUNTIME_TESTS=1`).
+- **Exit-code contract**: all diagnostics/recorder/evaluator exit nonzero on failure; never use `os._exit(0)` to mask a hung `simulation_app.close()` — use `diagnostics.sim_close.close_with_exit_code` which preserves the intended code.
+- **Corrected semantics (do not relitigate)**: a zero joint-position action is a position target at `default_joint_pos` held by implicit PD (NOT zero torque / free fall); the recorded `joint_pos` obs is *relative* (`joint_pos - default`, ±0.01 noise) so prior "runtime default mismatch" claims are disproved; `info['log']` is per-episode logging (only on reset steps), NOT per-step reward terms — per-step terms come from `reward_manager.get_active_iterable_terms` (rate form `func*weight`, net = Σ·step_dt).
+- Captain first run: `bash scripts/captain_first_run.sh` (diagnostics → 8192 probe → 50-iter pilot → evaluator).
 
 ## Maintaining this file
 
