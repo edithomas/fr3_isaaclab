@@ -1,0 +1,9 @@
+{"episode_id": "cal_001", "split": "calibration", "domain": "id", "failed": false, "probability": 0.08, "actions": {"ppo_a": [[0.12], [0.11], [0.10]], "ppo_b": [[0.13], [0.12], [0.11]]}}
+{"episode_id": "cal_002", "split": "calibration", "domain": "id", "failed": false, "probability": 0.10, "actions": {"ppo_a": [[0.20], [0.21], [0.19]], "ppo_b": [[0.19], [0.20], [0.20]]}}
+{"episode_id": "cal_003", "split": "calibration", "domain": "id", "failed": true, "probability": 0.91, "actions": {"ppo_a": [[0.80], [0.79], [0.81]], "ppo_b": [[0.10], [0.12], [0.11]]}}
+{"episode_id": "cal_004", "split": "calibration", "domain": "id", "failed": true, "probability": 0.95, "actions": {"ppo_a": [[0.90], [0.92], [0.88]], "ppo_b": [[0.15], [0.14], [0.16]]}}
+{"episode_id": "cal_005", "split": "calibration", "domain": "ood_push", "failed": true, "probability": 0.80, "actions": {"ppo_a": [[0.70], [0.71], [0.69]], "ppo_b": [[0.20], [0.21], [0.19]]}}
+{"episode_id": "eval_001", "split": "evaluation", "domain": "id", "failed": false, "probability": 0.07, "actions": {"ppo_a": [[0.11], [0.12], [0.10]], "ppo_b": [[0.12], [0.11], [0.12]]}}
+{"episode_id": "eval_002", "split": "evaluation", "domain": "id", "failed": true, "probability": 0.88, "actions": {"ppo_a": [[0.85], [0.86], [0.84]], "ppo_b": [[0.14], [0.13], [0.15]]}}
+{"episode_id": "eval_003", "split": "evaluation", "domain": "ood_push", "failed": false, "probability": 0.12, "actions": {"ppo_a": [[0.30], [0.31], [0.29]], "ppo_b": [[0.29], [0.30], [0.30]]}}
+{"episode_id": "eval_004", "split": "evaluation", "domain": "ood_push", "failed": true, "probability": 0.77, "actions": {"ppo_a": [[0.66], [0.67], [0.65]], "ppo_b": [[0.22], [0.23], [0.21]]}}

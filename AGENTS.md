@@ -67,6 +67,19 @@ source/fr3_isaaclab_project/fr3_isaaclab_project/
 3. Import the new task module in `tasks/__init__.py`
 4. Follow the existing pattern: extend the base task config from `isaaclab_tasks`, override the robot to `FR3_CFG`, and set end-effector/action joint names
 
+## Offline Analysis: `ensemble_gate` (Isaac-Sim-free)
+
+`ensemble_gate/` is a **pure standard-library Python** package + CLI
+(`python -m ensemble_gate`, or `scripts/ensemble_gate_metrics.py`) for offline
+ensemble-disagreement safety-gate metrics. It has **no** Isaac Sim / Lab /
+NumPy / SciPy / sklearn dependency, so it runs with any Python ≥ 3.9 and is
+tested without the simulator. Data contract, formulas, and the
+**research-instrument disclaimer** (not a safety guarantee / not sim-to-real)
+live in `docs/ensemble_gate.md`; a worked input is in
+`examples/ensemble_gate_sample.jsonl`. Tests: `python -m pytest tests/ -q`
+(conftest adds the repo root to `sys.path`, no install needed). Add new
+analysis tooling under this pattern rather than dragging in simulator deps.
+
 ## Headless Server Considerations
 
 - Always use `--headless` on servers without a display
